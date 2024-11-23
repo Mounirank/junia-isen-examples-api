@@ -1,32 +1,32 @@
-# variables.tf (root)
-variable "subscription_id" {
-  description = "Azure subscription ID"
-  type        = string
-  sensitive   = true
-}
-
+# modules/database/variables.tf
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "junia-isen-api-rg"
 }
 
 variable "location" {
   description = "Azure region"
   type        = string
-  default     = "francecentral"
 }
 
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "dev"
 }
 
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "junia-isen-api"
+}
+
+variable "database_subnet_id" {
+  description = "ID of the subnet for the database"
+  type        = string
+}
+
+variable "private_dns_zone_id" {
+  description = "ID of the private DNS zone"
+  type        = string
 }
 
 variable "postgres_username" {
