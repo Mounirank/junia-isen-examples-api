@@ -15,3 +15,11 @@ module "network" {
   environment        = var.environment
   project_name       = var.project_name
 }
+
+module "storage" {
+  source              = "./modules/storage"
+  resource_group_name = azurerm_resource_group.main.name
+  location           = var.location
+  environment        = var.environment
+  project_name       = var.project_name
+}
