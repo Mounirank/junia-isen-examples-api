@@ -1,0 +1,104 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'  
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: nkayere
+          POSTGRES_PASSWORD: Mounira18
+          POSTGRES_DB: junia_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+    - name: Install dependencies
+      run: |
+        uv pip install pytest
+        uv sync
+
+    - name: Run tests
+      env:
+        DATABASE_HOST: localhost
+        DATABASE_PORT: 5432
+        DATABASE_NAME: junia_db
+        DATABASE_USER: ${{ secrets.DATABASE_USER }}
+        DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+        STORAGE_ACCOUNT_URL: ${{ secrets.STORAGE_ACCOUNT_URL }}
+      run: uv run pytest
+      deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test]
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Login to Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Build and push Docker image
+      run: |
+        az acr build --registry ${{ secrets.ACR_NAME }} \
+          --image junia-isen-api:${{ github.sha }} \
+          --image junia-isen-api:latest .
+
+    - name: Deploy to Azure App Service
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'junia-isen-api-app'
+        images: ${{ secrets.ACR_NAME }}.azurecr.io/junia-isen-api:${{ github.sha }}
+
+    - name: Update App Settings
+      uses: azure/appservice-settings@v1
+      with:
+        app-name: 'junia-isen-api-app'
+        app-settings-json: |
+          [
+            {
+              "name": "DATABASE_HOST",
+              "value": "${{ secrets.DATABASE_HOST }}"
+            },
+            {
+              "name": "DATABASE_PORT",
+              "value": "5432"
+            },
+            {
+              "name": "DATABASE_NAME",
+              "value": "${{ secrets.DATABASE_NAME }}"
+            },
+            {
+              "name": "DATABASE_USER",
+              "value": "${{ secrets.DATABASE_USER }}"
+            },
+            {
+              "name": "DATABASE_PASSWORD",
+              "value": "${{ secrets.DATABASE_PASSWORD }}"
+            },
+            {
+              "name": "STORAGE_ACCOUNT_URL",
+              "value": "${{ secrets.STORAGE_ACCOUNT_URL }}"
+            }
+          ]
