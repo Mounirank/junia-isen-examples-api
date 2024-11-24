@@ -15,8 +15,8 @@ jobs:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: nkayere
-          POSTGRES_PASSWORD: Mounira18
+          POSTGRES_USER: ${{ secrets.DATABASE_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           POSTGRES_DB: junia_db
         ports:
           - 5432:5432
