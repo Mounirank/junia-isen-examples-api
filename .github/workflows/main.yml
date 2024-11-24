@@ -46,7 +46,7 @@ jobs:
         DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         STORAGE_ACCOUNT_URL: ${{ secrets.STORAGE_ACCOUNT_URL }}
       run: uv run pytest
-      deploy:
+  deploy:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [test]
